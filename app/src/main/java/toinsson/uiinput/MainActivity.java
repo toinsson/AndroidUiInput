@@ -55,11 +55,11 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-        private final MessageListenerHandler serverMessageHandler = new MessageListenerHandler(
-            new IMessageListener() {
-                @Override
-                public void messageReceived(Bundle messageBundle) {subMessageReceived(messageBundle);}
-            });
+    private final MessageListenerHandler serverMessageHandler = new MessageListenerHandler(
+        new IMessageListener() {
+            @Override
+            public void messageReceived(Bundle messageBundle) {subMessageReceived(messageBundle);}
+        });
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
