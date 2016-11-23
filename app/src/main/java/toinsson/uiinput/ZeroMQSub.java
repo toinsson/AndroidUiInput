@@ -42,31 +42,24 @@ class ZeroMQSub implements Runnable {
         ZMQ.Context context = ZMQ.context(1);
         ZMQ.Socket socket = context.socket(ZMQ.SUB);
 
-        socket.connect("tcp://130.209.246.38:5556");
+        socket.connect("tcp://192.168.42.1:5556");
         socket.subscribe("".getBytes());
-
-        Instrumentation instrumentation = new Instrumentation();
-        float posx;
-        float posy;
 
         Log.d("#DEBUG", "before while loop");
 
         initTouchInterface();
-//        touchDown();
-//        touchMove();
-//        touchUp();
 
         while(!Thread.currentThread().isInterrupted()) {
-//            Log.d("cew", "cewio");
+            Log.d("cew", "cewio");
             String type = socket.recvStr();
             String data = socket.recvStr();
 
             String[] separated = data.split(" ")[1].split(",");
-            posx = Float.parseFloat(separated[0]);
-            posy = Float.parseFloat(separated[1]);
+            float posx = Float.parseFloat(separated[0]);
+            float posy = Float.parseFloat(separated[1]);
 
-            int X = (int) (posy*2000);
-            int Y = (int) (posx*1000);
+            int X = (int) (posy*1343);
+            int Y = (int) (posx*2239);
 
             Log.d("#DEBUG", type + " " + posx + " " + posy);
             Integer motionType = 0;
@@ -92,23 +85,6 @@ class ZeroMQSub implements Runnable {
                     Log.d("#DEBUG", "wrong format.");
                     break;
             }
-
-//            writeEvent();
-
-//            instrumentation.sendPointerSync(MotionEvent.obtain(
-//                    SystemClock.uptimeMillis(),
-//                    SystemClock.uptimeMillis(),
-//                    motionType, posx*720, (1-posy)*1022, 0));
-
-
-            // prepare the message back to UI
-//            Message m = uiThreadHandler.obtainMessage();
-//            Bundle b = new Bundle();
-//            b.putString("EVENT_TYPE", address);
-//            b.putFloat("POSITION_X", posx);
-//            b.putFloat("POSITION_Y", posy);
-//            m.setData(b);
-//            uiThreadHandler.sendMessage(m);
         }
 
         socket.close();

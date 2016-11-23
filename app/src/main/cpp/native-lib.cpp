@@ -1,20 +1,21 @@
 #include <jni.h>
 #include <string>
 
-#include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <errno.h>
 #include <linux/input.h>
 #include <linux/uinput.h>
+#include <android/log.h>
+
+#include <stdio.h>
+#include <errno.h>
 #include <time.h>
+#include <string.h>
 
 
-#include "input.h"
-#include "uinput.h"
-
+#define TAG "EventInjector::JNI"
+#define LOGD(...) __android_log_print(ANDROID_LOG_DEBUG  , TAG, __VA_ARGS__)
 
 
 #define die(str, args...) do { \
@@ -54,10 +55,6 @@ Java_toinsson_uiinput_ZeroMQSub_printInt(
 }
 
 
-
-
-
-
 int                    fd;
 struct uinput_user_dev uidev;
 struct input_event     ev;
@@ -70,7 +67,16 @@ Java_toinsson_uiinput_ZeroMQSub_initTouchInterface(
         JNIEnv *env,
         jobject /* this */) {
 
+//    __android_log_print(TAG, "MyTag", "The value is %d", fd);
+    LOGD("init the touch interface");
+
+    system("su 0 setenforce 0");
+
+    LOGD("fd = %d", fd);
+
     fd = open("/dev/input/event0", O_WRONLY | O_NONBLOCK);
+
+    LOGD("fd = %d", fd);
 
     memset(&uidev, 0, sizeof(uidev));                  //creat an virtul input device node in /dev/input/***
     snprintf(uidev.name, UINPUT_MAX_NAME_SIZE, "uinput-sample");
@@ -93,6 +99,13 @@ Java_toinsson_uiinput_ZeroMQSub_touchUp(
     ev.type = EV_ABS;  //mouse left key
     ev.code = ABS_MT_TRACKING_ID;
     ev.value = 0xffffffff;
+    if(write(fd, &ev, sizeof(struct input_event)) < 0)
+        die("error: write");
+
+    memset(&ev, 0, sizeof(struct input_event));
+    ev.type = EV_SYN; // inform input system to process this input event
+    ev.code = SYN_REPORT;
+    ev.value = 0;
     if(write(fd, &ev, sizeof(struct input_event)) < 0)
         die("error: write");
 
