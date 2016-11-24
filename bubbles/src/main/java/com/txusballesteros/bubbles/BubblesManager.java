@@ -91,6 +91,17 @@ public class BubblesManager {
         bubblesService.moveBubble(x, y);
     }
 
+    public void paintBubble() {
+        if (bounded) {
+            bubblesService.paintBubble();
+        }
+    }
+
+    public void removeBubble() {
+        if (bounded) {
+            bubblesService.removeBubble();
+        }
+    }
     public void removeBubble(BubbleLayout bubble) {
         if (bounded) {
             bubblesService.removeBubble(bubble);

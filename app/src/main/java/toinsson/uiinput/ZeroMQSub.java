@@ -11,6 +11,7 @@ import org.zeromq.ZMQ;
 
 class ZeroMQSub implements Runnable {
     private final Handler uiThreadHandler;
+    private boolean touched = false;
 
     // Used to load the 'native-lib' library on application startup.
     static {
@@ -66,14 +67,19 @@ class ZeroMQSub implements Runnable {
             Integer motionType = 0;
 
             switch (type) {
-
-                case "touch up":
-                    Log.d("#DEBUG", "in touch up");
-                    motionType = MotionEvent.ACTION_UP;
-                    touchUp();
+                case "hover enter":
+                    motionType = MotionEvent.ACTION_HOVER_ENTER;
                     break;
+                case "hover move":
+                    motionType = MotionEvent.ACTION_HOVER_MOVE;
+                    break;
+                case "hover exit":
+                    motionType = MotionEvent.ACTION_HOVER_EXIT;
+                    break;
+
                 case "touch down":
                     Log.d("#DEBUG", "in touch down");
+                    touched = true;
                     motionType = MotionEvent.ACTION_DOWN;
                     touchDown(X_display, Y_display);
                     break;
@@ -81,21 +87,29 @@ class ZeroMQSub implements Runnable {
                     Log.d("#DEBUG", "in touch move");
                     motionType = MotionEvent.ACTION_MOVE;
                     touchMove(X_display, Y_display);
-
+                    break;
+                case "touch up":
+                    Log.d("#DEBUG", "in touch up");
+                    touched = false;
+                    motionType = MotionEvent.ACTION_UP;
+                    touchUp();
                     break;
                 default:
                     Log.d("#DEBUG", "wrong format.");
                     break;
             }
 
-            // prepare the message back to UI
-            Message m = uiThreadHandler.obtainMessage();
-            Bundle b = new Bundle();
-            b.putInt("EVENT_TYPE", motionType);
-            b.putInt("POSITION_X", X_window);
-            b.putInt("POSITION_Y", Y_window);
-            m.setData(b);
-            uiThreadHandler.sendMessage(m);
+            // filter out the hover state when in touch
+            if (!(motionType == MotionEvent.ACTION_HOVER_MOVE && touched)) {
+                // prepare the message back to UI
+                Message m = uiThreadHandler.obtainMessage();
+                Bundle b = new Bundle();
+                b.putInt("EVENT_TYPE", motionType);
+                b.putInt("POSITION_X", X_window);
+                b.putInt("POSITION_Y", Y_window);
+                m.setData(b);
+                uiThreadHandler.sendMessage(m);
+            }
         }
 
         socket.close();

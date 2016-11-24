@@ -35,7 +35,7 @@
         android:layout_width="30dp"
         android:layout_height="30dp"
         android:layout_gravity="center"
-        android:src="@drawable/pointer"
+        android:src="@drawable/pointer_black"
         android:scaleType="centerCrop"/>
     <!--android:background="@drawable/profile_decorator"-->
 

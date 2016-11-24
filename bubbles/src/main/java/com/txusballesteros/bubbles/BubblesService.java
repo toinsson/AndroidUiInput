@@ -32,6 +32,7 @@ import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -47,6 +48,8 @@ public class BubblesService extends Service {
     private BubbleTrashLayout bubblesTrash;
     private WindowManager windowManager;
     private BubblesLayoutCoordinator layoutCoordinator;
+
+    private final String TAG = "BubblesService";
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -92,6 +95,7 @@ public class BubblesService extends Service {
         bubble.setLayoutCoordinator(layoutCoordinator);
         bubbles.add(bubble);
         addViewToWindow(bubble);
+        Log.d(TAG, "addBubble: finished adding bubble");
     }
 
     void addTrash(int trashLayoutResourceId) {
@@ -151,8 +155,21 @@ public class BubblesService extends Service {
 
     public void moveBubble(int x, int y) {
         for (BubbleLayout bubble : bubbles) {
+            Log.d(TAG, "moveBubble: " + bubble.toString());
             bubble.move_abs(x, y);
         }
+    }
+    public void paintBubble() {
+        for (BubbleLayout bubble : bubbles) {
+            bubble.paint();
+        }
+    }
+
+    public void removeBubble() {
+        for (BubbleLayout bubble : bubbles) {
+            recycleBubble(bubble);
+        }
+        bubbles.clear();
     }
 
     public void removeBubble(BubbleLayout bubble) {

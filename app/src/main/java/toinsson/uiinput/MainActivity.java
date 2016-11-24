@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.Display;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -56,7 +57,20 @@ public class MainActivity extends AppCompatActivity {
 
         Log.d(TAG, type + " " + posx + " " + posy);
 
-        bubblesManager.moveBubble(posx, posy);
+        if (type == MotionEvent.ACTION_HOVER_ENTER) {
+            addNewBubble();
+            // change the layout
+            bubblesManager.paintBubble();
+        }
+
+        if (type == MotionEvent.ACTION_HOVER_EXIT) {
+            bubblesManager.removeBubble();
+        }
+
+        if (type == MotionEvent.ACTION_MOVE ||
+                type == MotionEvent.ACTION_HOVER_MOVE) {
+            bubblesManager.moveBubble(posx, posy);
+        }
     }
 
     private final MessageListenerHandler serverMessageHandler = new MessageListenerHandler(
@@ -117,12 +131,12 @@ public class MainActivity extends AppCompatActivity {
     private void initializeBubblesManager() {
         bubblesManager = new BubblesManager.Builder(this)
 //                .setTrashLayout(R.layout.bubble_trash_layout)
-                .setInitializationCallback(new OnInitializedCallback() {
-                    @Override
-                    public void onInitialized() {
-                        addNewBubble();
-                    }
-                })
+//                .setInitializationCallback(new OnInitializedCallback() {
+//                    @Override
+//                    public void onInitialized() {
+//                        addNewBubble();
+//                    }
+//                })
                 .build();
         bubblesManager.initialize();
     }

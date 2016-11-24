@@ -33,6 +33,7 @@ import android.os.Looper;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.view.Display;
+import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.WindowManager;
 
@@ -193,11 +194,18 @@ public class BubbleLayout extends BubbleBaseLayout {
             animator.start(nearestXWall, getViewParams().y);
         }
     }
+    public void paint(){
+
+
+    }
 
     public void move_abs(int X, int Y) {
         getViewParams().x = X;
         getViewParams().y = Y;
-        windowManager.updateViewLayout(this, getViewParams());
+        try {
+            windowManager.updateViewLayout(this, getViewParams());
+        }
+        catch (final IllegalArgumentException e) {}
     }
 
     private void move(float deltaX, float deltaY) {
