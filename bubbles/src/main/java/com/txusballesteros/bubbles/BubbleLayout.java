@@ -101,43 +101,44 @@ public class BubbleLayout extends BubbleBaseLayout {
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        if (event != null) {
-            switch (event.getAction()) {
-                case MotionEvent.ACTION_DOWN:
-                    initialX = getViewParams().x;
-                    initialY = getViewParams().y;
-                    initialTouchX = event.getRawX();
-                    initialTouchY = event.getRawY();
-                    playAnimationClickDown();
-                    lastTouchDown = System.currentTimeMillis();
-                    updateSize();
-                    animator.stop();
-                    break;
-                case MotionEvent.ACTION_MOVE:
-                    int x = initialX + (int)(event.getRawX() - initialTouchX);
-                    int y = initialY + (int)(event.getRawY() - initialTouchY);
-                    getViewParams().x = x;
-                    getViewParams().y = y;
-                    getWindowManager().updateViewLayout(this, getViewParams());
-                    if (getLayoutCoordinator() != null) {
-                        getLayoutCoordinator().notifyBubblePositionChanged(this, x, y);
-                    }
-                    break;
-                case MotionEvent.ACTION_UP:
-                    goToWall();
-                    if (getLayoutCoordinator() != null) {
-                        getLayoutCoordinator().notifyBubbleRelease(this);
-                        playAnimationClickUp();
-                    }
-                    if (System.currentTimeMillis() - lastTouchDown < TOUCH_TIME_THRESHOLD) {
-                        if (onBubbleClickListener != null) {
-                            onBubbleClickListener.onBubbleClick(this);
-                        }
-                    }
-                    break;
-            }
-        }
-        return super.onTouchEvent(event);
+        return false;
+//        if (event != null) {
+//            switch (event.getAction()) {
+//                case MotionEvent.ACTION_DOWN:
+//                    initialX = getViewParams().x;
+//                    initialY = getViewParams().y;
+//                    initialTouchX = event.getRawX();
+//                    initialTouchY = event.getRawY();
+//                    playAnimationClickDown();
+//                    lastTouchDown = System.currentTimeMillis();
+//                    updateSize();
+//                    animator.stop();
+//                    break;
+//                case MotionEvent.ACTION_MOVE:
+//                    int x = initialX + (int)(event.getRawX() - initialTouchX);
+//                    int y = initialY + (int)(event.getRawY() - initialTouchY);
+//                    getViewParams().x = x;
+//                    getViewParams().y = y;
+//                    getWindowManager().updateViewLayout(this, getViewParams());
+//                    if (getLayoutCoordinator() != null) {
+//                        getLayoutCoordinator().notifyBubblePositionChanged(this, x, y);
+//                    }
+//                    break;
+//                case MotionEvent.ACTION_UP:
+//                    goToWall();
+//                    if (getLayoutCoordinator() != null) {
+//                        getLayoutCoordinator().notifyBubbleRelease(this);
+//                        playAnimationClickUp();
+//                    }
+//                    if (System.currentTimeMillis() - lastTouchDown < TOUCH_TIME_THRESHOLD) {
+//                        if (onBubbleClickListener != null) {
+//                            onBubbleClickListener.onBubbleClick(this);
+//                        }
+//                    }
+//                    break;
+//            }
+//        }
+//        return super.onTouchEvent(event);
     }
 
     private void playAnimation() {
@@ -191,6 +192,12 @@ public class BubbleLayout extends BubbleBaseLayout {
             float nearestXWall = getViewParams().x >= middle ? width : 0;
             animator.start(nearestXWall, getViewParams().y);
         }
+    }
+
+    public void move_abs(int X, int Y) {
+        getViewParams().x = X;
+        getViewParams().y = Y;
+        windowManager.updateViewLayout(this, getViewParams());
     }
 
     private void move(float deltaX, float deltaY) {

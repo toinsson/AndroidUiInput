@@ -149,6 +149,12 @@ public class BubblesService extends Service {
         return params;
     }
 
+    public void moveBubble(int x, int y) {
+        for (BubbleLayout bubble : bubbles) {
+            bubble.move_abs(x, y);
+        }
+    }
+
     public void removeBubble(BubbleLayout bubble) {
         recycleBubble(bubble);
     }

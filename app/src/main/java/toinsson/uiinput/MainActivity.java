@@ -23,6 +23,8 @@ public class MainActivity extends AppCompatActivity {
     private TextView textView;
     private BubblesManager bubblesManager;
 
+    private final String TAG = "MainActivity";
+
     // Used to load the 'native-lib' library on application startup.
     static {
         System.loadLibrary("native-lib");
@@ -48,10 +50,13 @@ public class MainActivity extends AppCompatActivity {
 
     private void subMessageReceived(Bundle messageBundle) {
 
-        String type = messageBundle.getString("EVENT_TYPE");
-        Float posx = messageBundle.getFloat("POSITION_X");
-        Float posy = messageBundle.getFloat("POSITION_Y");
+        int type = messageBundle.getInt("EVENT_TYPE");
+        int posx = messageBundle.getInt("POSITION_X");
+        int posy = messageBundle.getInt("POSITION_Y");
 
+        Log.d(TAG, type + " " + posx + " " + posy);
+
+        bubblesManager.moveBubble(posx, posy);
     }
 
     private final MessageListenerHandler serverMessageHandler = new MessageListenerHandler(

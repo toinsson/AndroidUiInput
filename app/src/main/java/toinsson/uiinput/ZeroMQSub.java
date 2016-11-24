@@ -1,14 +1,11 @@
 package toinsson.uiinput;
 
-import android.app.Instrumentation;
+
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.os.SystemClock;
 import android.util.Log;
 import android.view.MotionEvent;
-
-
 import org.zeromq.ZMQ;
 
 
@@ -58,13 +55,18 @@ class ZeroMQSub implements Runnable {
             float posx = Float.parseFloat(separated[0]);
             float posy = Float.parseFloat(separated[1]);
 
-            int X = (int) (posy*1343);
-            int Y = (int) (posx*2239);
+            // for the raw display sensor
+            int X_display = (int) (posy*1343);
+            int Y_display = (int) (posx*2239);
+            // for the current window
+            int X_window = (int) (posx * 1920);
+            int Y_window = (int) (1104 * (1 - posy));
 
             Log.d("#DEBUG", type + " " + posx + " " + posy);
             Integer motionType = 0;
 
             switch (type) {
+
                 case "touch up":
                     Log.d("#DEBUG", "in touch up");
                     motionType = MotionEvent.ACTION_UP;
@@ -73,18 +75,27 @@ class ZeroMQSub implements Runnable {
                 case "touch down":
                     Log.d("#DEBUG", "in touch down");
                     motionType = MotionEvent.ACTION_DOWN;
-                    touchDown(X, Y);
+                    touchDown(X_display, Y_display);
                     break;
                 case "touch move":
                     Log.d("#DEBUG", "in touch move");
                     motionType = MotionEvent.ACTION_MOVE;
-                    touchMove(X, Y);
+                    touchMove(X_display, Y_display);
 
                     break;
                 default:
                     Log.d("#DEBUG", "wrong format.");
                     break;
             }
+
+            // prepare the message back to UI
+            Message m = uiThreadHandler.obtainMessage();
+            Bundle b = new Bundle();
+            b.putInt("EVENT_TYPE", motionType);
+            b.putInt("POSITION_X", X_window);
+            b.putInt("POSITION_Y", Y_window);
+            m.setData(b);
+            uiThreadHandler.sendMessage(m);
         }
 
         socket.close();
