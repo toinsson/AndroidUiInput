@@ -185,7 +185,7 @@ Java_toinsson_uiinput_ZeroMQSub_touchMove(
     memset(&ev, 0, sizeof(struct input_event));
     ev.type = EV_ABS;  //mouse left key
     ev.code = ABS_MT_PRESSURE;
-    ev.value = 20;
+    ev.value = 50;
     if(write(fd, &ev, sizeof(struct input_event)) < 0)
         die("error: write");
 

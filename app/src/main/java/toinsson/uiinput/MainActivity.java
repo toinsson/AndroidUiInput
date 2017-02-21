@@ -31,6 +31,7 @@ public class MainActivity extends AppCompatActivity {
         System.loadLibrary("native-lib");
     }
     public native String stringFromJNI();
+//    public native String initTouchInterface();
 
 
     private List<String> errorLog = new ArrayList<String>();
@@ -101,6 +102,11 @@ public class MainActivity extends AppCompatActivity {
         int height = size.y;
 
         Log.d("#DEBUG", "onCreate: width" + width + " height:" + height);
+
+        Shell s = new Shell();
+        Log.d("#DEBUG", "is root :"+s.isSuAvailable());
+
+//        initTouchInterface();
 
         // Example of a call to a native method
         TextView tv = (TextView) findViewById(R.id.sample_text);

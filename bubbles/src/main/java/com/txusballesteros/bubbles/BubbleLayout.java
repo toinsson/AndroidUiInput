@@ -32,10 +32,14 @@ import android.os.Handler;
 import android.os.Looper;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
+import android.view.View;
+import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.widget.ImageView;
 
 public class BubbleLayout extends BubbleBaseLayout {
     private float initialTouchX;
@@ -50,6 +54,12 @@ public class BubbleLayout extends BubbleBaseLayout {
     private int width;
     private WindowManager windowManager;
     private boolean shouldStickToWall = true;
+
+    private final String TAG = "BubbleLayout";
+
+    // store image view to change color
+    private ImageView imageview;
+
 
     public void setOnBubbleRemoveListener(OnBubbleRemoveListener listener) {
         onBubbleRemoveListener = listener;
@@ -68,9 +78,18 @@ public class BubbleLayout extends BubbleBaseLayout {
 
     public BubbleLayout(Context context, AttributeSet attrs) {
         super(context, attrs);
+        Log.d(TAG, "BubbleLayout: in constructor");
         animator = new MoveAnimator();
         windowManager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
-        initializeView();
+
+//        // save the view
+//        for(int index=0; index<this.getChildCount(); ++index) {
+//            View nextChild = this.getChildAt(index);
+//            Log.d(TAG, "BubbleLayout: " + nextChild.toString());
+//
+//        }
+//        imageview =
+//        initializeView();
     }
 
     public BubbleLayout(Context context, AttributeSet attrs, int defStyleAttr) {
@@ -196,7 +215,6 @@ public class BubbleLayout extends BubbleBaseLayout {
     }
     public void paint(){
 
-
     }
 
     public void move_abs(int X, int Y) {
@@ -205,6 +223,8 @@ public class BubbleLayout extends BubbleBaseLayout {
         try {
             windowManager.updateViewLayout(this, getViewParams());
         }
+        // takes care of the case when the view is not attached
+        // to the windowmanager yet - e.g. close to borders
         catch (final IllegalArgumentException e) {}
     }
 

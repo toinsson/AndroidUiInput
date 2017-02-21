@@ -6,6 +6,14 @@ import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 import android.view.MotionEvent;
+
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+
+
 import org.zeromq.ZMQ;
 
 
@@ -41,39 +49,66 @@ class ZeroMQSub implements Runnable {
         ZMQ.Socket socket = context.socket(ZMQ.SUB);
 
         socket.connect("tcp://192.168.42.1:5556");
-        socket.subscribe("".getBytes());
+        socket.subscribe("".getBytes());  // all topic
 
         Log.d("#DEBUG", "before while loop");
 
         initTouchInterface();
 
+        JsonParser parser = new JsonParser();
+        String data_string;
+        String data_string_clean;
+
         while(!Thread.currentThread().isInterrupted()) {
-            Log.d("cew", "cewio");
-            String type = socket.recvStr();
-            String data = socket.recvStr();
 
-            String[] separated = data.split(" ")[1].split(",");
-            float posx = Float.parseFloat(separated[0]);
-            float posy = Float.parseFloat(separated[1]);
+            data_string = socket.recvStr();
 
+            data_string_clean = data_string.replaceAll("\\\\", "");
+            data_string_clean = data_string_clean.substring(1, data_string_clean.length()-1);
+
+            Log.d("UiInput", "data received : "+data_string_clean);
+
+            JsonObject data_json = parser.parse(data_string_clean).getAsJsonObject();
+
+            JsonArray state_json = data_json.getAsJsonArray("state");
+            String state_0 = state_json.get(0).toString().replace("\"", "");
+            String state_1 = state_json.get(1).toString().replace("\"", "");
+            String state = state_0 + " " + state_1;
+
+            JsonArray coord = data_json.getAsJsonArray("coord");
+            Float posx = Float.parseFloat(coord.get(0).toString());
+            Float posy = Float.parseFloat(coord.get(1).toString());
+
+            Log.d("UiInput", "decoded : "+state+" "+posx+" "+posy);
+
+//            String data = socket.recvStr();
+//            String[] separated = data.split(" ")[1].split(",");
+
+//            float posx = Float.parseFloat(separated[0]);
+//            float posy = Float.parseFloat(separated[1]);
+//
             // for the raw display sensor
-            int X_display = (int) (posy*1343);
+            int X_display = (int) (posy*1343/2);
             int Y_display = (int) (posx*2239);
+
             // for the current window
             int X_window = (int) (posx * 1920);
-            int Y_window = (int) (1104 * (1 - posy));
+            int Y_window = (int) (1104 * (1 - posy/2));
 
-            Log.d("#DEBUG", type + " " + posx + " " + posy);
+//            Log.d("#DEBUG", type + " " + posx + " " + posy);
             Integer motionType = 0;
 
-            switch (type) {
+            switch (state) {
                 case "hover enter":
+                    Log.d("#DEBUG", "in touch down");
                     motionType = MotionEvent.ACTION_HOVER_ENTER;
                     break;
                 case "hover move":
+                    Log.d("#DEBUG", "in touch down");
                     motionType = MotionEvent.ACTION_HOVER_MOVE;
                     break;
                 case "hover exit":
+                    Log.d("#DEBUG", "in touch down");
                     motionType = MotionEvent.ACTION_HOVER_EXIT;
                     break;
 
@@ -94,6 +129,7 @@ class ZeroMQSub implements Runnable {
                     motionType = MotionEvent.ACTION_UP;
                     touchUp();
                     break;
+
                 default:
                     Log.d("#DEBUG", "wrong format.");
                     break;
