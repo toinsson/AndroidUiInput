@@ -100,8 +100,10 @@ public class MainActivity extends AppCompatActivity {
         display.getSize(size);
         int width = size.x;
         int height = size.y;
+        int rotation = display.getRotation();
 
-        Log.d("#DEBUG", "onCreate: width" + width + " height:" + height);
+//        if (width > height)
+        Log.d("#DEBUG", "onCreate: w h r " + width +" "+ height +" "+ rotation);
 
         Shell s = new Shell();
         Log.d("#DEBUG", "is root :"+s.isSuAvailable());
@@ -113,7 +115,7 @@ public class MainActivity extends AppCompatActivity {
         tv.setText(stringFromJNI());
 
         // create the motionEvent subscriber
-        new Thread(new ZeroMQSub(serverMessageHandler)).start();
+        new Thread(new ZeroMQSub(serverMessageHandler, rotation, width, height)).start();
     }
 
     private void addNewBubble() {
@@ -123,7 +125,6 @@ public class MainActivity extends AppCompatActivity {
             public void onBubbleRemoved(BubbleLayout bubble) { }
         });
         bubbleView.setOnBubbleClickListener(new BubbleLayout.OnBubbleClickListener() {
-
             @Override
             public void onBubbleClick(BubbleLayout bubble) {
                 Toast.makeText(getApplicationContext(), "Clicked !",
@@ -131,7 +132,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         bubbleView.setShouldStickToWall(false);
-        bubblesManager.addBubble(bubbleView, 60, 20);
+        bubblesManager.addBubble(bubbleView, 100, 400);
     }
 
     private void initializeBubblesManager() {

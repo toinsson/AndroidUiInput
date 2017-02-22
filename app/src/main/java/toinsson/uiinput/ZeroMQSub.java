@@ -21,6 +21,25 @@ class ZeroMQSub implements Runnable {
     private final Handler uiThreadHandler;
     private boolean touched = false;
 
+    // display hard constant - Nexus 7 orientation 0
+    private int display_max_width = 1343, display_max_height = 2239;
+    // max values in display space
+//    private int display_max_x = 0, display_max_y = 0;
+    // max values in window space
+    private int window_max_x = 0, window_max_y = 0;
+    // scaling in y
+    private float scaling_y = 1;
+    // rotation
+    private int rotation = 0;
+    // parsed field from zmq message
+    private float posx, posy;
+    private String state;
+    // display coordinates
+    private int X_display, Y_display;
+
+
+    private JsonParser parser = new JsonParser();
+
     // Used to load the 'native-lib' library on application startup.
     static {
         System.loadLibrary("native-lib");
@@ -30,72 +49,78 @@ class ZeroMQSub implements Runnable {
     public native String writeEvent();
     public native int printInt(int A, int B);
 
-
     public native String touchDown(int A, int B);
     public native String touchMove(int A, int B);
     public native String touchUp();
 
-    ZeroMQSub(Handler uiThreadHandler) {
+    ZeroMQSub(Handler uiThreadHandler,  int rotation, int width, int height) {
         this.uiThreadHandler = uiThreadHandler;
+        this.window_max_x = width;
+        this.window_max_y = height;
+        this.rotation = rotation;
+    }
+
+    private void parse_message(String msg){
+        String msg_clean = msg.replaceAll("\\\\", "");
+        msg_clean = msg_clean.substring(1, msg_clean.length()-1);
+
+        Log.d("UiInput", "data received : "+msg_clean);
+
+        JsonObject data_json = this.parser.parse(msg_clean).getAsJsonObject();
+
+        JsonArray state_json = data_json.getAsJsonArray("state");
+        String state_0 = state_json.get(0).toString().replace("\"", "");
+        String state_1 = state_json.get(1).toString().replace("\"", "");
+        this.state = state_0 + " " + state_1;
+
+        JsonArray coord = data_json.getAsJsonArray("coord");
+        this.posx = Float.parseFloat(coord.get(0).toString());
+        this.posy = Float.parseFloat(coord.get(1).toString());
+    }
+
+    private void compute_display_xy(){
+
+        switch (rotation) {
+            case 0:
+                X_display = (int) (posx               * display_max_width );
+                Y_display = (int) ((1-posy*scaling_y) * display_max_height);
+            case 1:
+                X_display = (int) (posx*scaling_y     * display_max_width );
+                Y_display = (int) (posy               * display_max_height);
+            case 2:
+                X_display = (int) ((1-posx)           * display_max_width );
+                Y_display = (int) (posy*scaling_y     * display_max_height);
+            case 3:
+                X_display = (int) ((1-posy)           * display_max_width );
+                Y_display = (int) ((1-posx*scaling_y) * display_max_height);
+        }
     }
 
     @Override
     public void run() {
 
-        Log.d("#jnI addition", Integer.toString(printInt(4, 8)));
-        Log.d("#jnI DEBUG", stringFromJNI());
-
         ZMQ.Context context = ZMQ.context(1);
         ZMQ.Socket socket = context.socket(ZMQ.SUB);
-
         socket.connect("tcp://192.168.42.1:5556");
         socket.subscribe("".getBytes());  // all topic
-
         Log.d("#DEBUG", "before while loop");
-
         initTouchInterface();
-
-        JsonParser parser = new JsonParser();
         String data_string;
-        String data_string_clean;
 
         while(!Thread.currentThread().isInterrupted()) {
 
             data_string = socket.recvStr();
-
-            data_string_clean = data_string.replaceAll("\\\\", "");
-            data_string_clean = data_string_clean.substring(1, data_string_clean.length()-1);
-
-            Log.d("UiInput", "data received : "+data_string_clean);
-
-            JsonObject data_json = parser.parse(data_string_clean).getAsJsonObject();
-
-            JsonArray state_json = data_json.getAsJsonArray("state");
-            String state_0 = state_json.get(0).toString().replace("\"", "");
-            String state_1 = state_json.get(1).toString().replace("\"", "");
-            String state = state_0 + " " + state_1;
-
-            JsonArray coord = data_json.getAsJsonArray("coord");
-            Float posx = Float.parseFloat(coord.get(0).toString());
-            Float posy = Float.parseFloat(coord.get(1).toString());
-
+            parse_message(data_string);
             Log.d("UiInput", "decoded : "+state+" "+posx+" "+posy);
 
-//            String data = socket.recvStr();
-//            String[] separated = data.split(" ")[1].split(",");
+            // mapping for coordinates
+            // zmq  window display (rotates)
+            // y    --x    0--x
+            // |__x |y     |y
+            compute_display_xy();
+            int X_window = (int) (posx * window_max_x);
+            int Y_window = (int) ((1 - posy) * window_max_y);
 
-//            float posx = Float.parseFloat(separated[0]);
-//            float posy = Float.parseFloat(separated[1]);
-//
-            // for the raw display sensor
-            int X_display = (int) (posy*1343/2);
-            int Y_display = (int) (posx*2239);
-
-            // for the current window
-            int X_window = (int) (posx * 1920);
-            int Y_window = (int) (1104 * (1 - posy/2));
-
-//            Log.d("#DEBUG", type + " " + posx + " " + posy);
             Integer motionType = 0;
 
             switch (state) {
@@ -135,7 +160,7 @@ class ZeroMQSub implements Runnable {
                     break;
             }
 
-            // filter out the hover state when in touch
+            // filter out the hover state when in touch - is this needed now??
             if (!(motionType == MotionEvent.ACTION_HOVER_MOVE && touched)) {
                 // prepare the message back to UI
                 Message m = uiThreadHandler.obtainMessage();
