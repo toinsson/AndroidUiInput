@@ -58,6 +58,22 @@ class ZeroMQSub implements Runnable {
         this.window_max_x = width;
         this.window_max_y = height;
         this.rotation = rotation;
+
+        // set the scaling
+        switch (rotation) {
+            case 0:
+                scaling_y = 0.40f;
+                break;
+            case 1:
+                scaling_y = 0.50f;
+                break;
+            case 2:
+                scaling_y = 0.40f;
+                break;
+            case 3:
+                scaling_y = 0.50f;
+                break;
+        }
     }
 
     private void parse_message(String msg){
@@ -84,15 +100,19 @@ class ZeroMQSub implements Runnable {
             case 0:
                 X_display = (int) (posx               * display_max_width );
                 Y_display = (int) ((1-posy*scaling_y) * display_max_height);
+                break;
             case 1:
-                X_display = (int) (posx*scaling_y     * display_max_width );
-                Y_display = (int) (posy               * display_max_height);
+                X_display = (int) (posy*scaling_y     * display_max_width );
+                Y_display = (int) (posx               * display_max_height);
+                break;
             case 2:
                 X_display = (int) ((1-posx)           * display_max_width );
                 Y_display = (int) (posy*scaling_y     * display_max_height);
+                break;
             case 3:
-                X_display = (int) ((1-posy)           * display_max_width );
-                Y_display = (int) ((1-posx*scaling_y) * display_max_height);
+                X_display = (int) ((1-posy*scaling_y) * display_max_width );
+                Y_display = (int) ((1-posx)           * display_max_height);
+                break;
         }
     }
 
@@ -119,7 +139,7 @@ class ZeroMQSub implements Runnable {
             // |__x |y     |y
             compute_display_xy();
             int X_window = (int) (posx * window_max_x);
-            int Y_window = (int) ((1 - posy) * window_max_y);
+            int Y_window = (int) ((1 - posy*scaling_y) * window_max_y);
 
             Integer motionType = 0;
 
