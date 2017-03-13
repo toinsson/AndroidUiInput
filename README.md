@@ -4,3 +4,4 @@ adb shell
 su
 chmod 777 /dev/input/eventX
 
+adb shell getevent -l /dev/input/event0

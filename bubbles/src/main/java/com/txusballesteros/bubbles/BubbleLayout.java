@@ -89,7 +89,8 @@ public class BubbleLayout extends BubbleBaseLayout {
 //
 //        }
 //        imageview =
-//        initializeView();
+
+        initializeView();
     }
 
     public BubbleLayout(Context context, AttributeSet attrs, int defStyleAttr) {
@@ -110,7 +111,8 @@ public class BubbleLayout extends BubbleBaseLayout {
     }
 
     private void initializeView() {
-        setClickable(true);
+        setClickable(false);
+        setFocusable(false);
     }
 
     @Override
@@ -121,45 +123,10 @@ public class BubbleLayout extends BubbleBaseLayout {
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
+        Log.d(TAG, "Bubble touched");
         return false;
-//        if (event != null) {
-//            switch (event.getAction()) {
-//                case MotionEvent.ACTION_DOWN:
-//                    initialX = getViewParams().x;
-//                    initialY = getViewParams().y;
-//                    initialTouchX = event.getRawX();
-//                    initialTouchY = event.getRawY();
-//                    playAnimationClickDown();
-//                    lastTouchDown = System.currentTimeMillis();
-//                    updateSize();
-//                    animator.stop();
-//                    break;
-//                case MotionEvent.ACTION_MOVE:
-//                    int x = initialX + (int)(event.getRawX() - initialTouchX);
-//                    int y = initialY + (int)(event.getRawY() - initialTouchY);
-//                    getViewParams().x = x;
-//                    getViewParams().y = y;
-//                    getWindowManager().updateViewLayout(this, getViewParams());
-//                    if (getLayoutCoordinator() != null) {
-//                        getLayoutCoordinator().notifyBubblePositionChanged(this, x, y);
-//                    }
-//                    break;
-//                case MotionEvent.ACTION_UP:
-//                    goToWall();
-//                    if (getLayoutCoordinator() != null) {
-//                        getLayoutCoordinator().notifyBubbleRelease(this);
-//                        playAnimationClickUp();
-//                    }
-//                    if (System.currentTimeMillis() - lastTouchDown < TOUCH_TIME_THRESHOLD) {
-//                        if (onBubbleClickListener != null) {
-//                            onBubbleClickListener.onBubbleClick(this);
-//                        }
-//                    }
-//                    break;
-//            }
-//        }
-//        return super.onTouchEvent(event);
     }
+
 
     private void playAnimation() {
         if (!isInEditMode()) {

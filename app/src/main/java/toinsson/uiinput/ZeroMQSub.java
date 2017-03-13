@@ -13,6 +13,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
+import com.txusballesteros.bubbles.BubblesManager;
 
 import org.zeromq.ZMQ;
 
@@ -23,12 +24,20 @@ class ZeroMQSub implements Runnable {
 
     // display hard constant - Nexus 7 orientation 0
     private int display_max_width = 1343, display_max_height = 2239;
+
     // max values in display space
 //    private int display_max_x = 0, display_max_y = 0;
     // max values in window space
     private int window_max_x = 0, window_max_y = 0;
-    // scaling in y
-    private float scaling_y = 1;
+
+    // scaling in y for display
+    private float d_scaling_y = 1;
+    // scaling in y for window
+    private float w_scaling_y = 1;
+
+    // offset in y to account for Android taskbar
+    private float offset_y = 0.0f;
+
     // rotation
     private int rotation = 0;
     // parsed field from zmq message
@@ -37,7 +46,7 @@ class ZeroMQSub implements Runnable {
     // display coordinates
     private int X_display, Y_display;
 
-
+    private BubblesManager bubblesManager;
     private JsonParser parser = new JsonParser();
 
     // Used to load the 'native-lib' library on application startup.
@@ -53,34 +62,45 @@ class ZeroMQSub implements Runnable {
     public native String touchMove(int A, int B);
     public native String touchUp();
 
-    ZeroMQSub(Handler uiThreadHandler,  int rotation, int width, int height) {
+    ZeroMQSub(Handler uiThreadHandler,  BubblesManager bubblesManager, int rotation, int width, int height) {
         this.uiThreadHandler = uiThreadHandler;
         this.window_max_x = width;
         this.window_max_y = height;
         this.rotation = rotation;
 
+        this.bubblesManager = bubblesManager;
+
         // set the scaling
         switch (rotation) {
             case 0:
-                scaling_y = 0.40f;
+                d_scaling_y = 0.3125f; // 600/1920
+                w_scaling_y = 600f / (1824f - 50);
+                offset_y = 96f / 1920f * 2239f;
                 break;
             case 1:
-                scaling_y = 0.50f;
+                d_scaling_y = 0.4333f; // 520/1200
+                w_scaling_y = 520f / (1104f - 50);
+                offset_y = 96f / 1200f * 1343f;
                 break;
             case 2:
-                scaling_y = 0.40f;
+                d_scaling_y = 0.3125f; // 600/1920
+                w_scaling_y = 600f / (1824f - 50);
+                offset_y = 96f / 1920f * 2239f;
                 break;
-            case 3:
-                scaling_y = 0.50f;
+            case 3:  // test case on full screen
+                d_scaling_y = 1.0f; // 520/1200
+                w_scaling_y = 1.0f;
+                offset_y =  0.0f; // 96f / 1200f * 1343f;
                 break;
         }
+        // scaling_y = 1.0f;
     }
 
     private void parse_message(String msg){
         String msg_clean = msg.replaceAll("\\\\", "");
         msg_clean = msg_clean.substring(1, msg_clean.length()-1);
 
-        Log.d("UiInput", "data received : "+msg_clean);
+//        Log.d("UiInput", "data received : "+msg_clean);
 
         JsonObject data_json = this.parser.parse(msg_clean).getAsJsonObject();
 
@@ -99,18 +119,18 @@ class ZeroMQSub implements Runnable {
         switch (rotation) {
             case 0:
                 X_display = (int) (posx               * display_max_width );
-                Y_display = (int) ((1-posy*scaling_y) * display_max_height);
+                Y_display = (int) ((1-posy*d_scaling_y) * display_max_height - offset_y);
                 break;
             case 1:
-                X_display = (int) (posy*scaling_y     * display_max_width );
+                X_display = (int) (posy*d_scaling_y     * display_max_width + offset_y);
                 Y_display = (int) (posx               * display_max_height);
                 break;
             case 2:
                 X_display = (int) ((1-posx)           * display_max_width );
-                Y_display = (int) (posy*scaling_y     * display_max_height);
+                Y_display = (int) (posy*d_scaling_y     * display_max_height + offset_y);
                 break;
             case 3:
-                X_display = (int) ((1-posy*scaling_y) * display_max_width );
+                X_display = (int) ((1-posy*d_scaling_y) * display_max_width - offset_y);
                 Y_display = (int) ((1-posx)           * display_max_height);
                 break;
         }
@@ -139,40 +159,41 @@ class ZeroMQSub implements Runnable {
             // |__x |y     |y
             compute_display_xy();
             int X_window = (int) (posx * window_max_x);
-            int Y_window = (int) ((1 - posy*scaling_y) * window_max_y);
+            int Y_window = (int) ((1 - posy*w_scaling_y) * window_max_y - 50);
 
             Integer motionType = 0;
 
             switch (state) {
                 case "hover enter":
-                    Log.d("#DEBUG", "in touch down");
+//                    Log.d("#DEBUG", "in hover enter");
                     motionType = MotionEvent.ACTION_HOVER_ENTER;
                     break;
                 case "hover move":
-                    Log.d("#DEBUG", "in touch down");
+//                    Log.d("#DEBUG", "in hover move");
                     motionType = MotionEvent.ACTION_HOVER_MOVE;
                     break;
                 case "hover exit":
-                    Log.d("#DEBUG", "in touch down");
+//                    Log.d("#DEBUG", "in hover exit");
                     motionType = MotionEvent.ACTION_HOVER_EXIT;
                     break;
 
                 case "touch down":
-                    Log.d("#DEBUG", "in touch down");
+//                    Log.d("#DEBUG", "in touch down");
                     touched = true;
                     motionType = MotionEvent.ACTION_DOWN;
-                    touchDown(X_display, Y_display);
+                    bubblesManager.removeBubble();
+//                    touchDown(X_display, Y_display);
                     break;
                 case "touch move":
                     Log.d("#DEBUG", "in touch move");
                     motionType = MotionEvent.ACTION_MOVE;
-                    touchMove(X_display, Y_display);
+//                    touchMove(X_display, Y_display);
                     break;
                 case "touch up":
                     Log.d("#DEBUG", "in touch up");
                     touched = false;
                     motionType = MotionEvent.ACTION_UP;
-                    touchUp();
+//                    touchUp();
                     break;
 
                 default:
@@ -180,17 +201,46 @@ class ZeroMQSub implements Runnable {
                     break;
             }
 
-            // filter out the hover state when in touch - is this needed now??
-            if (!(motionType == MotionEvent.ACTION_HOVER_MOVE && touched)) {
-                // prepare the message back to UI
-                Message m = uiThreadHandler.obtainMessage();
-                Bundle b = new Bundle();
-                b.putInt("EVENT_TYPE", motionType);
-                b.putInt("POSITION_X", X_window);
-                b.putInt("POSITION_Y", Y_window);
-                m.setData(b);
-                uiThreadHandler.sendMessage(m);
+            Message m = uiThreadHandler.obtainMessage();
+            Bundle b = new Bundle();
+            b.putInt("POSITION_X", X_window);
+            b.putInt("POSITION_Y", Y_window);
+            b.putInt("EVENT_TYPE", motionType);
+            m.setData(b);
+            uiThreadHandler.sendMessage(m);
+
+            switch (state) {
+                case "touch down":
+//                    Log.d("#DEBUG", "in touch down");
+                    touched = true;
+                    touchDown(X_display, Y_display);
+                    break;
+                case "touch move":
+//                    Log.d("#DEBUG", "in touch move");
+                    touchMove(X_display, Y_display);
+                    break;
+                case "touch up":
+//                    Log.d("#DEBUG", "in touch up");
+                    touched = false;
+                    touchUp();
+                    break;
+                default:
+//                    Log.d("#DEBUG", "wrong format.");
+                    break;
             }
+
+
+            // filter out the hover state when in touch - is this needed now??
+//            if (!(motionType == MotionEvent.ACTION_HOVER_MOVE && touched)) {
+                // prepare the message back to UI
+//                Message m = uiThreadHandler.obtainMessage();
+//                Bundle b = new Bundle();
+//                b.putInt("EVENT_TYPE", motionType);
+//                b.putInt("POSITION_X", X_window);
+//                b.putInt("POSITION_Y", Y_window);
+//                m.setData(b);
+//                uiThreadHandler.sendMessage(m);
+//            }
         }
 
         socket.close();

@@ -5,6 +5,7 @@ import android.graphics.Point;
 import android.net.Uri;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Display;
 import android.view.LayoutInflater;
@@ -58,13 +59,15 @@ public class MainActivity extends AppCompatActivity {
 
         Log.d(TAG, type + " " + posx + " " + posy);
 
-        if (type == MotionEvent.ACTION_HOVER_ENTER) {
+        if (type == MotionEvent.ACTION_HOVER_ENTER ||
+                type == MotionEvent.ACTION_UP) {
             addNewBubble();
             // change the layout
             bubblesManager.paintBubble();
         }
 
         if (type == MotionEvent.ACTION_HOVER_EXIT) {
+//                || type == MotionEvent.ACTION_DOWN) {
             bubblesManager.removeBubble();
         }
 
@@ -102,6 +105,9 @@ public class MainActivity extends AppCompatActivity {
         int height = size.y;
         int rotation = display.getRotation();
 
+        DisplayMetrics metrics = getResources().getDisplayMetrics();
+        Log.d("#DEBUG", "onCreate: density" + (int)(metrics.density));
+
 //        if (width > height)
         Log.d("#DEBUG", "onCreate: w h r " + width +" "+ height +" "+ rotation);
 
@@ -115,24 +121,36 @@ public class MainActivity extends AppCompatActivity {
         tv.setText(stringFromJNI());
 
         // create the motionEvent subscriber
-        new Thread(new ZeroMQSub(serverMessageHandler, rotation, width, height)).start();
+        new Thread(new ZeroMQSub(serverMessageHandler, bubblesManager, rotation, width, height)).start();
     }
 
     private void addNewBubble() {
         BubbleLayout bubbleView = (BubbleLayout)LayoutInflater.from(MainActivity.this).inflate(R.layout.bubble_layout, null);
-        bubbleView.setOnBubbleRemoveListener(new BubbleLayout.OnBubbleRemoveListener() {
-            @Override
-            public void onBubbleRemoved(BubbleLayout bubble) { }
-        });
-        bubbleView.setOnBubbleClickListener(new BubbleLayout.OnBubbleClickListener() {
-            @Override
-            public void onBubbleClick(BubbleLayout bubble) {
-                Toast.makeText(getApplicationContext(), "Clicked !",
-                        Toast.LENGTH_SHORT).show();
-            }
-        });
-        bubbleView.setShouldStickToWall(false);
-        bubblesManager.addBubble(bubbleView, 100, 400);
+//        bubbleView.setOnBubbleRemoveListener(new BubbleLayout.OnBubbleRemoveListener() {
+//            @Override
+//            public void onBubbleRemoved(BubbleLayout bubble) { }
+//        });
+//        bubbleView.setOnBubbleClickListener(new BubbleLayout.OnBubbleClickListener() {
+//            @Override
+//            public void onBubbleClick(BubbleLayout bubble) {
+//                Toast.makeText(getApplicationContext(), "Clicked !",
+//                        Toast.LENGTH_SHORT).show();
+//            }
+//        });
+//        bubbleView.setShouldStickToWall(false);
+        bubblesManager.addBubble(bubbleView, 10, 10);
+//        bubbleView = (BubbleLayout)LayoutInflater.from(MainActivity.this).inflate(R.layout.bubble_layout, null);
+//        bubblesManager.addBubble(bubbleView, 100, 400);
+//        bubbleView = (BubbleLayout)LayoutInflater.from(MainActivity.this).inflate(R.layout.bubble_layout, null);
+//        bubblesManager.addBubble(bubbleView, 100, 1104 - 520);
+//        bubbleView = (BubbleLayout)LayoutInflater.from(MainActivity.this).inflate(R.layout.bubble_layout, null);
+//        bubblesManager.addBubble(bubbleView, 100, 1104 - 96);
+//        bubbleView = (BubbleLayout)LayoutInflater.from(MainActivity.this).inflate(R.layout.bubble_layout, null);
+//        bubblesManager.addBubble(bubbleView, 100, 1104);
+//        bubbleView = (BubbleLayout)LayoutInflater.from(MainActivity.this).inflate(R.layout.bubble_layout, null);
+//        bubblesManager.addBubble(bubbleView, 100, 1200);
+
+
     }
 
     private void initializeBubblesManager() {

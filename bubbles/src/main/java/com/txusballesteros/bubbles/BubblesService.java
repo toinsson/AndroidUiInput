@@ -66,19 +66,27 @@ public class BubblesService extends Service {
     }
 
     private void recycleBubble(final BubbleLayout bubble) {
-        new Handler(Looper.getMainLooper()).post(new Runnable() {
-            @Override
-            public void run() {
-                getWindowManager().removeView(bubble);
-                for (BubbleLayout cachedBubble : bubbles) {
-                    if (cachedBubble == bubble) {
-                        bubble.notifyBubbleRemoved();
-                        bubbles.remove(cachedBubble);
-                        break;
-                    }
-                }
+        getWindowManager().removeView(bubble);
+        for (BubbleLayout cachedBubble : bubbles) {
+            if (cachedBubble == bubble) {
+                bubble.notifyBubbleRemoved();
+                bubbles.remove(cachedBubble);
+                break;
             }
-        });
+        }
+//        new Handler(Looper.getMainLooper()).post(new Runnable() {
+//            @Override
+//            public void run() {
+//                getWindowManager().removeView(bubble);
+//                for (BubbleLayout cachedBubble : bubbles) {
+//                    if (cachedBubble == bubble) {
+//                        bubble.notifyBubbleRemoved();
+//                        bubbles.remove(cachedBubble);
+//                        break;
+//                    }
+//                }
+//            }
+//        });
     }
 
     private WindowManager getWindowManager() {
@@ -95,7 +103,7 @@ public class BubblesService extends Service {
         bubble.setLayoutCoordinator(layoutCoordinator);
         bubbles.add(bubble);
         addViewToWindow(bubble);
-        Log.d(TAG, "addBubble: finished adding bubble");
+//        Log.d(TAG, "addBubble: finished adding bubble");
     }
 
     void addTrash(int trashLayoutResourceId) {
@@ -155,7 +163,7 @@ public class BubblesService extends Service {
 
     public void moveBubble(int x, int y) {
         for (BubbleLayout bubble : bubbles) {
-            Log.d(TAG, "moveBubble: " + bubble.toString());
+//            Log.d(TAG, "moveBubble: " + bubble.toString());
             bubble.move_abs(x, y);
         }
     }
@@ -167,9 +175,13 @@ public class BubblesService extends Service {
 
     public void removeBubble() {
         for (BubbleLayout bubble : bubbles) {
-            recycleBubble(bubble);
+            try {
+                recycleBubble(bubble);
+            }
+            catch (final IllegalArgumentException e) {}
         }
         bubbles.clear();
+        Log.d(TAG, "remove bubble");
     }
 
     public void removeBubble(BubbleLayout bubble) {

@@ -74,46 +74,24 @@ Java_toinsson_uiinput_ZeroMQSub_initTouchInterface(
 
     LOGD("fd = %d", fd);
 
-    fd = open("/dev/input/event0", O_WRONLY | O_NONBLOCK);
+    fd = open("/dev/input/event0", O_WRONLY | O_ASYNC); // | O_DSYNC);
 
     LOGD("fd = %d", fd);
 
-    memset(&uidev, 0, sizeof(uidev));                  //creat an virtul input device node in /dev/input/***
-    snprintf(uidev.name, UINPUT_MAX_NAME_SIZE, "uinput-sample");
-    uidev.id.bustype = BUS_USB;
-    uidev.id.vendor  = 0x1;
-    uidev.id.product = 0x1;
-    uidev.id.version = 1;
+//    memset(&uidev, 0, sizeof(uidev));                  //creat an virtul input device node in /dev/input/***
+//    snprintf(uidev.name, UINPUT_MAX_NAME_SIZE, "uinput-sample");
+//    uidev.id.bustype = BUS_USB;
+//    uidev.id.vendor  = 0x1;
+//    uidev.id.product = 0x1;
+//    uidev.id.version = 1;
 
     std::string hello = "Init OK";
     return env->NewStringUTF(hello.c_str());
 }
 
-extern "C"
-jstring
-Java_toinsson_uiinput_ZeroMQSub_touchUp(
-        JNIEnv *env,
-        jobject /* this */) {
 
-    memset(&ev, 0, sizeof(struct input_event));
-    ev.type = EV_ABS;  //mouse left key
-    ev.code = ABS_MT_TRACKING_ID;
-    ev.value = 0xffffffff;
-    if(write(fd, &ev, sizeof(struct input_event)) < 0)
-        die("error: write");
-
-    memset(&ev, 0, sizeof(struct input_event));
-    ev.type = EV_SYN; // inform input system to process this input event
-    ev.code = SYN_REPORT;
-    ev.value = 0;
-    if(write(fd, &ev, sizeof(struct input_event)) < 0)
-        die("error: write");
-
-    std::string hello = "touch up ok";
-    return env->NewStringUTF(hello.c_str());
-}
-
-int trackingId = 100;
+int trackingId = 1000;
+int pressure = 0;
 
 extern "C"
 jstring
@@ -124,25 +102,32 @@ Java_toinsson_uiinput_ZeroMQSub_touchDown(
         jint Y)
 {
     trackingId += 1;
+    pressure = 0;
+    int len;
+
+    LOGD("touchDown", len);
 
     memset(&ev, 0, sizeof(struct input_event));
     ev.type = EV_ABS;  //mouse left key
     ev.code = ABS_MT_TRACKING_ID;
     ev.value = trackingId;
+    len = write(fd, &ev, sizeof(struct input_event));
     if(write(fd, &ev, sizeof(struct input_event)) < 0)
         die("error: write");
 
-    memset(&ev, 0, sizeof(struct input_event));
-    ev.type = EV_ABS;  //mouse left key
-    ev.code = ABS_MT_PRESSURE;
-    ev.value = 20;
-    if(write(fd, &ev, sizeof(struct input_event)) < 0)
-        die("error: write");
+//    memset(&ev, 0, sizeof(struct input_event));
+//    ev.type = EV_ABS;  //mouse left key
+//    ev.code = ABS_MT_PRESSURE;
+//    ev.value = 20;
+//    if(write(fd, &ev, sizeof(struct input_event)) < 0)
+//        die("error: write");
 
     memset(&ev, 0, sizeof(struct input_event));
     ev.type = EV_ABS;         //send x coordinates
     ev.code = ABS_MT_POSITION_X;
     ev.value = X;
+    len = write(fd, &ev, sizeof(struct input_event));
+//    LOGD("len = %d", len);
     if(write(fd, &ev, sizeof(struct input_event)) < 0)
         die("error: write");
 
@@ -150,6 +135,8 @@ Java_toinsson_uiinput_ZeroMQSub_touchDown(
     ev.type = EV_ABS;  //send y coordinates
     ev.code = ABS_MT_POSITION_Y;
     ev.value = Y;
+    len = write(fd, &ev, sizeof(struct input_event));
+//    LOGD("len = %d", len);
     if(write(fd, &ev, sizeof(struct input_event)) < 0)
         die("error: write");
 
@@ -157,6 +144,8 @@ Java_toinsson_uiinput_ZeroMQSub_touchDown(
     ev.type = EV_SYN; // inform input system to process this input event
     ev.code = SYN_REPORT;
     ev.value = 0;
+    len = write(fd, &ev, sizeof(struct input_event));
+//    LOGD("len = %d", len);
     if(write(fd, &ev, sizeof(struct input_event)) < 0)
         die("error: write");
 
@@ -178,16 +167,20 @@ Java_toinsson_uiinput_ZeroMQSub_touchMove(
 //    memset(&ev, 0, sizeof(struct input_event));
 //    ev.type = EV_ABS;  //mouse left key
 //    ev.code = ABS_MT_TRACKING_ID;
-//    ev.value = 60;
+//    ev.value = trackingId;
 //    if(write(fd, &ev, sizeof(struct input_event)) < 0)
 //        die("error: write");
 
-    memset(&ev, 0, sizeof(struct input_event));
-    ev.type = EV_ABS;  //mouse left key
-    ev.code = ABS_MT_PRESSURE;
-    ev.value = 50;
-    if(write(fd, &ev, sizeof(struct input_event)) < 0)
-        die("error: write");
+//    if (pressure < 100){
+//        pressure += 10;
+//    }
+//
+//    memset(&ev, 0, sizeof(struct input_event));
+//    ev.type = EV_ABS;  //mouse left key
+//    ev.code = ABS_MT_PRESSURE;
+//    ev.value = pressure;
+//    if(write(fd, &ev, sizeof(struct input_event)) < 0)
+//        die("error: write");
 
     memset(&ev, 0, sizeof(struct input_event));
     ev.type = EV_ABS;         //send x coordinates
@@ -214,6 +207,37 @@ Java_toinsson_uiinput_ZeroMQSub_touchMove(
     std::string hello = "touch up ok";
     return env->NewStringUTF(hello.c_str());
 }
+
+extern "C"
+jstring
+Java_toinsson_uiinput_ZeroMQSub_touchUp(
+        JNIEnv *env,
+        jobject /* this */) {
+    int len;
+
+    memset(&ev, 0, sizeof(struct input_event));
+    ev.type = EV_ABS;  //mouse left key
+    ev.code = ABS_MT_TRACKING_ID;
+    ev.value = 0xffffffff;
+    len = write(fd, &ev, sizeof(struct input_event));
+//    LOGD("len = %d", len);
+    if(write(fd, &ev, sizeof(struct input_event)) < 0)
+        die("error: write");
+
+    memset(&ev, 0, sizeof(struct input_event));
+    ev.type = EV_SYN; // inform input system to process this input event
+    ev.code = SYN_REPORT;
+    ev.value = 0;
+    len = write(fd, &ev, sizeof(struct input_event));
+//    LOGD("len = %d", len);
+    if(write(fd, &ev, sizeof(struct input_event)) < 0)
+        die("error: write");
+
+    std::string hello = "touch up ok";
+    return env->NewStringUTF(hello.c_str());
+}
+
+
 
 extern "C"
 jstring
