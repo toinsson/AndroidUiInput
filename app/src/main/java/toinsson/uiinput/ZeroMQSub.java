@@ -178,6 +178,7 @@ class ZeroMQSub implements Runnable {
                     break;
                 case "hover exit":
                     motionType = MotionEvent.ACTION_HOVER_EXIT;
+                    bubblesManager.removeBubble();
                     break;
 
                 case "touch down":

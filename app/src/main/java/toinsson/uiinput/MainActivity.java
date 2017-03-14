@@ -66,10 +66,11 @@ public class MainActivity extends AppCompatActivity {
             bubblesManager.paintBubble();
         }
 
-        if (type == MotionEvent.ACTION_HOVER_EXIT) {
-//                || type == MotionEvent.ACTION_DOWN) {
-            bubblesManager.removeBubble();
-        }
+        // this is done in zmq sub
+        // if (type == MotionEvent.ACTION_HOVER_EXIT) {
+        // || type == MotionEvent.ACTION_DOWN) {
+        //    bubblesManager.removeBubble();
+        //}
 
         if (type == MotionEvent.ACTION_MOVE ||
                 type == MotionEvent.ACTION_HOVER_MOVE) {
